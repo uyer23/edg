@@ -4944,7 +4944,14 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
 
             <!-- 按钮组 -->
             <div class="optimize-buttons">
-                <span class="save-tip">💡 保存提示：仅保存延迟最低的前16个优选IP</span>
+                <span class="save-tip">💡 保存数量：
+                    <select id="saveCountSelect" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd;">
+                        <option value="16">前16个</option>
+                        <option value="50">前50个</option>
+                        <option value="100">前100个</option>
+                        <option value="all" selected>全部</option>
+                    </select>
+                </span>
                 <button type="button" class="btn btn-start-optimize" id="btnStartOptimize"
                     onclick="startOptimize()">开始优选</button>
                 <button type="button" class="btn btn-save-override" id="btnSaveOverride"
@@ -9100,8 +9107,9 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
             }
 
             const allResults = optimizeResults[currentSelectedCountry];
-            // 只保存前16个
-            const resultsToSave = allResults.slice(0, 16);
+            // 根据用户选择的数量保存
+            const saveCount = document.getElementById('saveCountSelect').value;
+            const resultsToSave = saveCount === 'all' ? allResults : allResults.slice(0, parseInt(saveCount));
             // 修改格式：包含国家、类型和时间信息
             const newContent = resultsToSave.map(r => `${r.ip}:${r.port}#${r.remark}|${r.type}|${r.time}ms`).join('\n');
             console.log(`[在线优选] 成功: ${currentSelectedCountry} 保存 ${resultsToSave.length} 个 IP（总共 ${allResults.length} 个）`);
