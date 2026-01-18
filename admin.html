@@ -5556,11 +5556,9 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                 if (currentConfig.优选订阅生成?.本地IP库?.指定端口 !== undefined) {
                     document.getElementById('specifiedPort').value = currentConfig.优选订阅生成.本地IP库.指定端口;
                 }
-                // 设置自定义运营商
-                if (currentConfig.优选订阅生成?.本地IP库?.自定义运营商 !== undefined) {
-                    const ispValue = currentConfig.优选订阅生成.本地IP库.自定义运营商;
-                    document.getElementById('customISP').value = ispValue === null ? 'null' : ispValue;
-                }
+                // 设置自定义运营商（如果不存在则默认为null）
+                const ispValue = currentConfig.优选订阅生成?.本地IP库?.自定义运营商;
+                document.getElementById('customISP').value = ispValue === null || ispValue === undefined ? 'null' : ispValue;
             } else {
                 document.getElementById('ipMode').value = 'custom';
                 loadCustomIPs();
@@ -5776,29 +5774,23 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                 }
             });
 
-            // 显示或隐藏指定端口
+            // 显示或隐藏指定端口和自定义运营商
             const portSection = document.getElementById('portSection');
-            if (portSection) {
-                if (mode === 'random' && currentConfig.优选订阅生成?.本地IP库?.指定端口 !== undefined) {
+            const ispSection = document.getElementById('ispSection');
+            if (portSection && ispSection) {
+                if (mode === 'random') {
                     portSection.classList.remove('hidden-section');
                     portSection.style.display = 'grid';
-                } else {
-                    portSection.classList.add('hidden-section');
-                    portSection.style.display = 'none';
-                }
-            }
-
-            // 显示或隐藏自定义运营商
-            const ispSection = document.getElementById('ispSection');
-            if (ispSection) {
-                if (mode === 'random' && currentConfig.优选订阅生成?.本地IP库?.自定义运营商 !== undefined) {
                     ispSection.classList.remove('hidden-section');
                     ispSection.style.display = 'grid';
                 } else {
+                    portSection.classList.add('hidden-section');
+                    portSection.style.display = 'none';
                     ispSection.classList.add('hidden-section');
                     ispSection.style.display = 'none';
                 }
             }
+
 
             // 显示或隐藏在线优选和订阅接口按钮（仅在自定义优选模式下显示）
             const onlineOptimizeBtn = document.getElementById('onlineOptimizeBtn');
@@ -6409,23 +6401,18 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
 
             const updates = {
                 local: mode !== 'generator',
-                本地IP库: { 随机IP: mode === 'random', 随机数量: parseInt(document.getElementById('randomCount').value) || 16 },
+                本地IP库: { 
+                    随机IP: mode === 'random', 
+                    随机数量: parseInt(document.getElementById('randomCount').value) || 16,
+                    指定端口: parseInt(document.getElementById('specifiedPort').value),
+                    自定义运营商: document.getElementById('customISP').value === 'null' ? null : document.getElementById('customISP').value
+                },
                 SUB: mode === 'generator' ? document.getElementById('generatorURL').value : null,
                 SUBNAME: currentConfig.优选订阅生成.SUBNAME,
                 SUBUpdateTime: currentConfig.优选订阅生成.SUBUpdateTime,
                 TOKEN: currentConfig.优选订阅生成.TOKEN
             };
 
-            // 如果指定端口存在，添加到本地IP库
-            if (currentConfig.优选订阅生成?.本地IP库?.指定端口 !== undefined) {
-                updates.本地IP库.指定端口 = parseInt(document.getElementById('specifiedPort').value);
-            }
-
-            // 如果自定义运营商存在，添加到本地IP库
-            if (currentConfig.优选订阅生成?.本地IP库?.自定义运营商 !== undefined) {
-                const ispValue = document.getElementById('customISP').value;
-                updates.本地IP库.自定义运营商 = ispValue === 'null' ? null : ispValue;
-            }
 
             currentConfig.优选订阅生成 = { ...currentConfig.优选订阅生成, ...updates };
 
@@ -6671,11 +6658,9 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                     if (currentConfig.优选订阅生成?.本地IP库?.指定端口 !== undefined) {
                         document.getElementById('specifiedPort').value = currentConfig.优选订阅生成.本地IP库.指定端口;
                     }
-                    // 设置自定义运营商
-                    if (currentConfig.优选订阅生成?.本地IP库?.自定义运营商 !== undefined) {
-                        const ispValue = currentConfig.优选订阅生成.本地IP库.自定义运营商;
-                        document.getElementById('customISP').value = ispValue === null ? 'null' : ispValue;
-                    }
+                    // 设置自定义运营商（如果不存在则默认为null）
+                    const ispValue = currentConfig.优选订阅生成?.本地IP库?.自定义运营商;
+                    document.getElementById('customISP').value = ispValue === null || ispValue === undefined ? 'null' : ispValue;
                 } else {
                     document.getElementById('ipMode').value = 'custom';
                     loadCustomIPs();
