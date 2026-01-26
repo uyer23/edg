@@ -4939,6 +4939,13 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                         class="optimize-concurrency-input" placeholder="1-32" oninput="validateConcurrency(this)"
                         onchange="validateConcurrency(this)">
                 </div>
+
+                <div class="form-group">
+                    <label for="optimizeMaxCount">优选数量：</label>
+                    <input type="number" id="optimizeMaxCount" min="100" max="10000" value="500"
+                        class="optimize-concurrency-input" placeholder="100-10000" oninput="validateMaxCount(this)"
+                        onchange="validateMaxCount(this)">
+                </div>
             </div>
 
             <!-- 进度条 -->
@@ -8500,6 +8507,16 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
             }
         }
 
+        // 验证优选数量输入
+        function validateMaxCount(input) {
+            let value = parseInt(input.value);
+            if (isNaN(value) || value < 100) {
+                input.value = 100;
+            } else if (value > 10000) {
+                input.value = 10000;
+            }
+        }
+
         // 开始优选
         async function startOptimize() {
             console.log('[在线优选] 开始: 优选流程');
@@ -8512,7 +8529,14 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
             const progressText = document.getElementById('optimizeProgressText');
             progressBar.classList.remove('hidden-section');
             progressFill.style.width = '0%';
-            progressText.textContent = '0/3000 (0.00%)';
+            
+            // 获取优选数量配置
+            let maxCount = parseInt(document.getElementById('optimizeMaxCount').value) || 500;
+            if (isNaN(maxCount) || maxCount < 100 || maxCount > 10000) {
+                maxCount = 500;
+                document.getElementById('optimizeMaxCount').value = '500';
+            }
+            progressText.textContent = `0/${maxCount} (0.00%)`;
 
             document.getElementById('optimizeResultsTabs').classList.add('hidden-section');
             document.getElementById('optimizeResultsContent').classList.add('hidden-section');
@@ -8533,12 +8557,12 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                     document.getElementById('optimizeConcurrency').value = '8';
                 }
 
-                console.log(`[在线优选] 步骤2: 用户选择 - IP库=${ipLibrary}, 端口=${port}, 并发线程=${concurrency}`);
+                console.log(`[在线优选] 步骤2: 用户选择 - IP库=${ipLibrary}, 端口=${port}, 并发线程=${concurrency}, 优选数量=${maxCount}`);
                 currentIPLibrary = ipLibrary; // 保存当前IP库类型
 
                 // 获取IP列表
                 console.log('[在线优选] 步骤3: 获取 IP 列表');
-                const ips = await getIPList(ipLibrary, port);
+                const ips = await getIPList(ipLibrary, port, maxCount);
 
                 if (ips.length === 0) {
                     console.error('[在线优选] 错误: 未能获取到IP列表');
@@ -8665,7 +8689,7 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
         }
 
         // 获取IP列表
-        async function getIPList(ipLibrary, port) {
+        async function getIPList(ipLibrary, port, maxCount = 500) {
             // 定义各个IP库的原始URLs（仅使用官方地址）
             const urlMap = {
                 'cf-official': 'https://cf.090227.xyz/ips-v4',
@@ -8685,11 +8709,11 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                 if (ipLibrary === 'reverse-proxy') {
                     // 处理反向代理列表
                     console.log('[在线优选] 进度: 处理反向代理列表');
-                    return processReverseProxyList(text, port);
+                    return processReverseProxyList(text, port, maxCount);
                 } else {
                     // 处理CIDR列表
                     console.log('[在线优选] 进度: 处理 CIDR 列表');
-                    return processCIDRList(text, port);
+                    return processCIDRList(text, port, maxCount);
                 }
             } catch (error) {
                 console.error('[在线优选] 获取IP列表失败:', error);
@@ -8698,7 +8722,7 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
         }
 
         // 处理反向代理列表
-        function processReverseProxyList(text, targetPort) {
+        function processReverseProxyList(text, targetPort, maxCount = 500) {
             const lines = text.trim().split('\n');
             const filteredIPs = [];
 
@@ -8720,24 +8744,24 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
 
             console.log(`[在线优选] 结果: 匹配端口=${targetPort} 的 IP 数量=${filteredIPs.length}`);
 
-            // 如果超过3000个，随机选择3000个
-            if (filteredIPs.length > 3000) {
-                console.log('[在线优选] 提示: IP 数量超过 3000，将随机选择 3000 个');
-                return shuffleArray(filteredIPs).slice(0, 3000);
+            // 如果超过maxCount个，随机选择maxCount个
+            if (filteredIPs.length > maxCount) {
+                console.log(`[在线优选] 提示: IP 数量超过 ${maxCount}，将随机选择 ${maxCount} 个`);
+                return shuffleArray(filteredIPs).slice(0, maxCount);
             }
 
             return filteredIPs;
         }
 
         // 处理CIDR列表
-        function processCIDRList(text, port) {
+        function processCIDRList(text, port, maxCount = 500) {
             const lines = text.trim().split('\n');
             const cidrs = lines.filter(line => line.trim() && !line.startsWith('#'));
 
             console.log(`[在线优选] 调试: CIDR 列表数量=${cidrs.length}`);
 
             const ips = [];
-            const targetCount = 3000;
+            const targetCount = maxCount;
 
             while (ips.length < targetCount && cidrs.length > 0) {
                 for (const cidr of cidrs) {
