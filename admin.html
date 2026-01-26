@@ -10026,7 +10026,7 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
             if (!configItem) return;
             
             const baseUrl = window.location.origin;
-            const configToken = configItem.token || currentConfig?.优选订阅生成?.TOKEN || '';
+            const configToken = currentConfig?.优选订阅生成?.TOKEN || '';
             
             const subUrl = `${baseUrl}/fixed-sub?id=${configId}&token=${configToken}`;
             
@@ -10128,8 +10128,7 @@ vless://7b102311-43fd-4e8f-977e-8090623c101d@edt-pages.github.io:443?security=tl
                 
                 const configsToSave = fixedConfigs.map((c, index) => ({
                     id: c.id || 'fixed-config-' + Date.now() + '-' + index,
-                    config: (c.config || '').trim(),
-                    token: c.token || token
+                    config: (c.config || '').trim()
                 }));
                 
                 const response = await fetch(`/public/fixed-configs.json?token=${token}`, {
